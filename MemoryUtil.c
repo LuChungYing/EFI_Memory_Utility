@@ -96,7 +96,7 @@ ListAllFunc (
     gST->ConOut->ClearScreen (gST->ConOut);
   
     Print (L"Memory Utility\n");
-    Print (L"What you want to do?\n");
+    Print (L"What do you want to do?\n");
     Print (L"1.Get Current Memory Allocation Map.\n");
     Print (L"2.AllocatePages ()\n");
     Print (L"3.AllocatePool ()\n");
@@ -255,7 +255,9 @@ ShowMemoryMap(
     MemSize = memmap->NumberOfPages * PAGESIZE;
     
     PagesPerType[memmap->Type] += memmap->NumberOfPages;
-    
+    if (memmap->Type == EfiConventionalMemory){
+      gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGREEN);
+    }
     Print (mem_types[memmap->Type]);
     Print (L" %16llX-%16llX ",
       memmap->PhysicalStart,
@@ -265,6 +267,7 @@ ShowMemoryMap(
       memmap->NumberOfPages,
       memmap->Attribute
       );
+    gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
   }
   
   Print (L"Press Any Key to Continue. Press [ESC] to Skip Printing...\n");
@@ -276,17 +279,24 @@ ShowMemoryMap(
     return Status;    
   }
   Print (L"\n");
+  
+  ShowTotalSum(PagesPerType, TotalMem, y);
+  /*
   for (i = 0; i < MemMapSize/DsSize; i++){
     if (PagesPerType[i] != 0){
       Print (L"    ");
+      if (i == 7){    
+        gST->ConOut->SetAttribute (gST->ConOut, EFI_YELLOW);
+      }
       Print (mem_types[i]);
       Print (L":%8d Pages(%d).\n",PagesPerType[i],PagesPerType[i] * PAGESIZE);
+      gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
       TotalMem += PagesPerType[i] * PAGESIZE;
       y += PagesPerType[i];
     }
   }
   Print (L"    Total Memory: %lld MiB(%lld)Bytes %d\n",(y*PAGESIZE)/MB, TotalMem, y);
-  
+  */
   Print (L"\nPress Any Key to Exit...\n");
   gBS->WaitForEvent (1, &gST->ConIn->WaitForKey, NULL);
   Status = GetKey (&Key);
@@ -296,6 +306,30 @@ ShowMemoryMap(
   
   return Status;
   
+}
+
+VOID
+ShowTotalSum( 
+  UINT64 *PagesPerType, 
+  UINT64 TotalMem, 
+  UINT64 y
+  )
+{
+  UINT32 i;
+  for (i = 0; i < 17; i++){
+    if (PagesPerType[i] != 0){
+      Print (L"    ");
+      if (i == 7){    
+        gST->ConOut->SetAttribute (gST->ConOut, EFI_YELLOW);
+      }
+      Print (mem_types[i]);
+      Print (L":%8d Pages(%d).\n",PagesPerType[i],PagesPerType[i] * PAGESIZE);
+      gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
+      TotalMem += PagesPerType[i] * PAGESIZE;
+      y += PagesPerType[i];
+    }
+  }
+  Print (L"    Total Memory: %lld MiB(%lld)Bytes %d\n",(y*PAGESIZE)/MB, TotalMem, y);
 }
 EFI_STATUS
 ShowFreeMemoryMap(
@@ -345,7 +379,9 @@ ShowFreeMemoryMap(
     Print (L"Getmap Error num = %d Size=%d.\n",Status,MemMapSize);  
     return Status;
   }
+  
   Print (L"Type               Start            End               #Pages             Attributes\n");  
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_YELLOW);
   for (i = 0; i < MemMapSize/DsSize ; i++){
     memmap = (EFI_MEMORY_DESCRIPTOR*) ((UINT8*)MemMap + i * DESC_SIZE);
     MemSize = memmap->NumberOfPages * PAGESIZE;
@@ -361,7 +397,7 @@ ShowFreeMemoryMap(
         );
       }
   }
-  
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
   Print (L"Press Any Key to Continue.\n");
   gBS->WaitForEvent (1, &gST->ConIn->WaitForKey, NULL);
   
@@ -535,15 +571,15 @@ SelectMemoryType(){
 
 EFI_STATUS
 PutKey(
-  EFI_INPUT_KEY  Key,
-  UINT32         *data,
-  UINT32         count,
-  UINT32         max
+  IN      EFI_INPUT_KEY  Key,
+  IN OUT  UINT32         *data,
+  IN      UINT32         count,
+  IN      UINT32         max
 )
 {
   UINT32 i;
   //Print (L"c%dc\n",count);
-  
+    
   if (Key.ScanCode == SCAN_ESC) {
     return EXIT;
   }
@@ -619,7 +655,7 @@ AllcatePageForAllFreeMem(
     if (Status == EFI_OUT_OF_RESOURCES){
       
       Print(L"Failed!!");
-      if (pages != 128){
+      if (pages != 32){
         Print (L"Try to Allocate %d Pages.\n",pages,pages/2);
         pages = pages / 2;
       }
@@ -1248,8 +1284,6 @@ ShowMemoryAllocateInfo(
   Print (L"Show Allocated Memory Information.\n\n");
   
   while (1){
-    //Print (L"head link address = %p\n",&(PageHead->link));
-    //Print (L"Current forward link = %p\n",current->link.ForwardLink);
     if (IsListEmpty (&(PageHead->link) )){
       break;
       }
@@ -1310,9 +1344,6 @@ ShowMemoryAllocateInfo(
     //Print (L"head link address = %p\n",&(PageHead->link));
     //Print (L"Current forward link = %p\n",current->link.ForwardLink);
     if (IsListEmpty (&(PoolHead->link) )){
-      Print (L"head address of link = %p\n",&(PoolHead->link));
-      Print (L"heaf ForwardLink = %p\n",PoolHead->link.ForwardLink);
-      Print (L"no entry\n");
       break;
       }
     current = GetNextNode (&(PoolHead->link), current);
