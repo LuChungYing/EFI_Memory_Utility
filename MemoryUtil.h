@@ -234,5 +234,9 @@ VOID
 ShowTotalSum(
 );
 
+VOID
+FreeAllAllocateMemoryBeforeExit(
+);
+
 #endif
 

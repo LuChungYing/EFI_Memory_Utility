@@ -86,6 +86,7 @@ MemoryUtilMain (
   }
   
   gST->ConOut->ClearScreen (gST->ConOut);
+  FreeAllAllocateMemoryBeforeExit();
   return EFI_SUCCESS;
 }
 
@@ -269,8 +270,9 @@ ShowMemoryMap(
       );
     gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
   }
-  
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_BROWN);
   Print (L"Press Any Key to Continue. Press [ESC] to Skip Printing...\n");
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
   gBS->WaitForEvent (1, &gST->ConIn->WaitForKey, NULL);
   Status = GetKey (&Key);
   
@@ -297,7 +299,10 @@ ShowMemoryMap(
   }
   Print (L"    Total Memory: %lld MiB(%lld)Bytes %d\n",(y*PAGESIZE)/MB, TotalMem, y);
   */
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_BROWN);
   Print (L"\nPress Any Key to Exit...\n");
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
+  
   gBS->WaitForEvent (1, &gST->ConIn->WaitForKey, NULL);
   Status = GetKey (&Key);
 
@@ -398,7 +403,9 @@ ShowFreeMemoryMap(
       }
   }
   gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_BROWN);
   Print (L"Press Any Key to Continue.\n");
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
   gBS->WaitForEvent (1, &gST->ConIn->WaitForKey, NULL);
   
   Status = GetKey (&Key);
@@ -505,7 +512,7 @@ AllcatePage(
   doAllcatePages(mt, at, addr);
   
   //Print (L"%r\n",Status);
-  Status = GetKey (&Key);
+  //Status = GetKey (&Key);
 }
 
 VOID
@@ -944,7 +951,9 @@ doAllcatePages(
     }
   }
   Print (L"\n%r\n",Status);
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_BROWN);
   Print (L"Press Any Key To Continue!\n");
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
   GetKey(&Key);
   
   //gBS->FreePages (addr, pages);
@@ -993,7 +1002,9 @@ doAllcatePool(
       else {
         Print (L"Error Allocate because %r.\n",Status);
       }
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_BROWN);
   Print (L"\nPress Any Key To Continue!\n");
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
   GetKey(&Key);
 }
 
@@ -1334,7 +1345,9 @@ ShowMemoryAllocateInfo(
     }
   }
   Print (L"There are no more Allocated Page Memory Exists.\n");
-  Print (L"\nPress Any Key To Continue!\n");
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_BROWN);
+  Print (L"\nPress Any Key To Continue!\n\n");
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
   GetKey(&Key);
   ////////////////////////////////////////////////////////
   //                 Show Pool Allocated                //
@@ -1393,7 +1406,9 @@ ShowMemoryAllocateInfo(
     }
   }
   Print (L"There are no more Allocated Pool Memory Exists.\n");
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_BROWN);
   Print (L"\nPress Any Key To Continue!\n");
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
   GetKey(&Key);
   
 }
@@ -1536,12 +1551,16 @@ FreeMemoryAllcate(
         Print(L" Fail because %r\n",Status);  
       }
     }
+    gST->ConOut->SetAttribute (gST->ConOut, EFI_BROWN);
     Print (L"\nPress Any Key To Continue and Clean screen!\n");
+    gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
     GetKey(&Key);
     gST->ConOut->ClearScreen (gST->ConOut);
     Print (L"Free Allocated Page Memory\n");
   }
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_BROWN);
   Print (L"\nPress Any Key to Continue!\n");
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
   GetKey(&Key);
    
   ////////////////////////////////////
@@ -1670,12 +1689,16 @@ FreeMemoryAllcate(
         Print(L" Fail because %r\n",Status);  
       }
     }
+    gST->ConOut->SetAttribute (gST->ConOut, EFI_BROWN);
     Print (L"\nPress Any Key To Continue and Clean screen!\n");
+    gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
     GetKey(&Key);
     gST->ConOut->ClearScreen (gST->ConOut);
     Print (L"Free Allocated Page Memory\n");
   }
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_BROWN);
   Print (L"\nPress [ESC] To Go Back Menu!\n");
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
   while(1){
     GetKey(&Key);
     if (Key.ScanCode== SCAN_ESC){
@@ -1733,7 +1756,9 @@ FreeAllAllocateMemory(
           break;
         }
       }
+    gST->ConOut->SetAttribute (gST->ConOut, EFI_BROWN);
     Print (L"\nPress Any Key To Continue and Clean screen!\n");
+    gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
       GetKey(&Key);
   }
   else{
@@ -1773,10 +1798,92 @@ FreeAllAllocateMemory(
           break;
         }
       }
+    gST->ConOut->SetAttribute (gST->ConOut, EFI_BROWN);
     Print (L"\nPress Any Key To Continue and Clean screen!\n");
+    gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY);
       GetKey(&Key);
   }
   return EFI_SUCCESS;
 }
 
+VOID
+FreeAllAllocateMemoryBeforeExit(
+){
+  EFI_STATUS  Status;
+  LIST_ENTRY              *current;
+  LIST_ENTRY              *tem;
+  EFI_PHYSICAL_ADDRESS    CurrentAddress;
+  UINTN                   Currentpages;
+  UINT32                  x = 0;
+      
+      
+    current = PageHead->link.ForwardLink;
+
+    while (1){
+        if (IsListEmpty (&(PageHead->link) )){
+          break;
+        }
+        tem    = GetNextNode (&(PageHead->link), current);
+        Print (L"Free->[%d] : ",x);
+        CurrentAddress = _CR((Memory_Pages_List_Entry*)current,
+               Memory_Pages_List_Entry, 
+               link
+             )->address;
+        Currentpages   = _CR(
+               (Memory_Pages_List_Entry*)current,
+               Memory_Pages_List_Entry, 
+               link
+             )->pages;
+        Print (L"%8d pages at 0x%p address.\n",
+          Currentpages,
+          CurrentAddress
+          );
+        x++;
+        Status = RemovePageEntry (
+                   _CR(
+                     (Memory_Pages_List_Entry*)current,
+                     Memory_Pages_List_Entry, 
+                     link
+                     )
+                 );
+        
+        current = tem;
+      }
+    
+    
+    current = PoolHead->link.ForwardLink;
+
+    while (1){
+        if (IsListEmpty (&(PoolHead->link) )){
+          break;
+        }
+        tem     = GetNextNode (&(PoolHead->link), current);
+        Print (L"Free->[%d] : ",x);
+        CurrentAddress = (EFI_PHYSICAL_ADDRESS)(_CR((Memory_Pool_List_Entry*)current,
+               Memory_Pool_List_Entry, 
+               link
+             )->ptr);
+        Currentpages   = _CR(
+               (Memory_Pool_List_Entry*)current,
+               Memory_Pool_List_Entry, 
+               link
+             )->bytes;
+        Print (L"%8d bytes at 0x%p address.\n",
+          Currentpages,
+          CurrentAddress
+          );
+        x++;
+        Status = RemovePoolEntry (
+                   _CR(
+                     (Memory_Pool_List_Entry*)current,
+                     Memory_Pool_List_Entry, 
+                     link
+                     )
+                 );
+        
+        current = tem;
+
+        }
+}
+    
 
